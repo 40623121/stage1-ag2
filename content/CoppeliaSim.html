@@ -122,7 +122,7 @@ img.add_border {
                             <li><a href="./../blog/index.html">blog</a></li>
                         </ul>
                       </li>
-                     <li><a href='Introduction.html'>Introduction</a><li><a href='Onshape.html'>Onshape</a><li><a href='V-rep.html'>V-rep</a><li class='has-children'><a href='Experience.html'>Experience</a><ul class='dropdown'><li><a href='Week2.html'>Week2</a><li><a href='Week3.html'>Week3</a><li><a href='Week4.html'>Week4</a></li></ul><li><a href='Final Report.html'>Final Report</a></li>
+                     <li><a href='Introduction.html'>Introduction</a><li><a href='Assemble.html'>Assemble</a><li><a href='CoppeliaSim.html'>CoppeliaSim</a><li class='has-children'><a href='Experience.html'>Experience</a><ul class='dropdown'><li><a href='Week2.html'>Week2</a><li><a href='Week3.html'>Week3</a></li></ul><li><a href='Final Report.html'>Final Report</a></li>
                       </ul>
                 </nav>
               </div>
@@ -133,8 +133,106 @@ img.add_border {
           </div>
           
         </header>
-    <div id="tipue_search_content">Onshape << <a href='Onshape.html'>Previous</a> <a href='Experience.html'>Next</a> >> Experience<br /><h1>V-rep</h1>
-<br />Onshape << <a href='Onshape.html'>Previous</a> <a href='Experience.html'>Next</a> >> Experience</div>
+    <div id="tipue_search_content">Assemble << <a href='Assemble.html'>Previous</a> <a href='Experience.html'>Next</a> >> Experience<br /><h1>CoppeliaSim</h1>
+<p>預計要讓繪製的飛機做一個起降的動作。</p>
+<p><span style="background-color: #ffff00;">設計過程</span></p>
+<p><span style="background-color: #ffffff;">1.將組合好的組合圖匯入。</span></p>
+<p><span style="background-color: #ffffff;">2.拆解組合起來的飛機。</span></p>
+<p><span style="background-color: #ffffff;">3.加入4根joint，將長度設為0.09m，直徑為0.02m。</span></p>
+<p><span style="background-color: #ffffff;">4.把旋轉軸與四個輪子結合，並把輪子重新命名為left_motor,right_motor,back_left,back_right。</span></p>
+<p><span style="background-color: #ffffff;">5.將機體本身跟輪子設為動態物件並實體化。</span></p>
+<p><span style="background-color: #ffffff;">6.把馬達轉速設為100deg/s。</span></p>
+<p><span style="background-color: #ffffff;">7.代入程式碼</span></p>
+<pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">function sysCall_init() 
+    left_front_handle= sim.getObjectHandle('left_motor')
+    left_back_handle= sim.getObjectHandle('left_motor')
+    right_back_handle= sim.getObjectHandle('right_motor')
+    right_front_handle= sim.getObjectHandle('right_motor')
+    MaxVel=2
+    leftvelocity=0
+    rightvelocity=0
+    dVel=0.5;
+    --sim.setJointTargetVelocity(left_front_handle,leftvelocity)
+    sim.setJointTargetVelocity(left_back_handle,leftvelocity)
+    sim.setJointTargetVelocity(right_back_handle,rightvelocity)
+    --sim.setJointTargetVelocity(right_front_handle,rightvelocity)
+end
+
+function sysCall_actuation() 
+    message,auxiliaryData=sim.getSimulatorMessage()
+    while message~=-1 do
+        if (message==sim.message_keypress) then
+            if (auxiliaryData[1]==32) then
+                -- right key
+                leftvelocity=0
+                rightvelocity=0
+                sim.setJointForce(left_front_handle, 0)
+                sim.setJointForce(left_back_handle, 0)
+                sim.setJointForce(right_back_handle, 0)
+                sim.setJointForce(right_front_handle, 0)
+                break
+            else
+                --sim.setJointForce(left_front_handle, 10000)
+                sim.setJointForce(left_back_handle, 10000)
+                sim.setJointForce(right_back_handle, 10000)
+                --sim.setJointForce(right_front_handle, 10000)
+            end
+            if (auxiliaryData[1]==2007) then
+                -- up key
+                leftvelocity=(leftvelocity+rightvelocity)/2
+                rightvelocity=leftvelocity
+                leftvelocity=leftvelocity+dVel
+                rightvelocity=rightvelocity+dVel
+            end
+            if (auxiliaryData[1]==2008) then
+                -- down key
+                leftvelocity=(leftvelocity+rightvelocity)/2
+                rightvelocity=leftvelocity
+                leftvelocity=leftvelocity-dVel
+                rightvelocity=rightvelocity-dVel
+            end
+            if (auxiliaryData[1]==2009) then
+                -- left key
+                leftvelocity=leftvelocity-dVel
+                rightvelocity=rightvelocity+dVel
+            end
+            if (auxiliaryData[1]==2010) then
+                -- right key
+                leftvelocity=leftvelocity+dVel
+                rightvelocity=rightvelocity-dVel
+            end
+        end
+        message,auxiliaryData=sim.getSimulatorMessage()
+    end
+    
+    if leftvelocity&gt;MaxVel then
+        leftvelocity=MaxVel
+    end
+    if leftvelocity&lt;-MaxVel then
+        leftvelocity=-MaxVel
+    end
+    
+    if rightvelocity&gt;MaxVel then
+                rightvelocity=MaxVel
+    end
+    if rightvelocity&lt;-MaxVel then
+                rightvelocity=-MaxVel
+    end
+    
+    --sim.setJointTargetVelocity(left_front_handle,leftvelocity)
+    sim.setJointTargetVelocity(left_back_handle,leftvelocity)
+    sim.setJointTargetVelocity(right_back_handle,rightvelocity)
+    --sim.setJointTargetVelocity(right_front_handle,rightvelocity)
+    
+end </pre>
+<p><span style="background-color: #ffffff;"></span></p>
+<p><span style="background-color: #ffffff;"></span></p>
+<p></p>
+<p><span style="background-color: #ffff00;">作動結果</span></p>
+<p><span style="background-color: #ffff00;"><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/RweU4et9Tw8" width="560"></iframe></span></p>
+<p></p>
+<p></p>
+<br />Assemble << <a href='Assemble.html'>Previous</a> <a href='Experience.html'>Next</a> >> Experience</div>
         
     <!-- footer -->
       <div class="container">
